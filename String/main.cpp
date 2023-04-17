@@ -6,9 +6,8 @@ String operator+(const String& left, const String& right);
 
 class String
 {
-	int size;			//Размер строки в байтах
-	char* str;			//Адрес строки в динамической памяти
-
+	int size;	//Размер строки в Байтах
+	char* str;	//Адрес строки в динамической памяти
 public:
 	int get_size()const
 	{
@@ -23,76 +22,81 @@ public:
 		return str;
 	}
 
-	//			Constructor
-	explicit String(int size = 256) 
+	//			Constructors:
+	explicit String(int size = 256) :size(size), str(new char[size] {})
 	{
 		//this->size = size;
-		this->str = new char[size] {};
-		cout << "Default1AtgConstruct:\t" << this << endl;
+		//this->str = new char[size] {};
+		cout << "Default1ArgConstruct:\t" << this << endl;
 	}
-	String(const char* str)
+	String(const char* str) :String(strlen(str) + 1)//Делегируем выделение памяти конструктору по умолчанию
 	{
-		this->size = strlen(str) + 1;
-		this->str = new char[size] {};
-		for (int i = 0; i < size; i++)
-		{
-			this->str[i] = str[i];
-		}
-		cout << std::left << "Constructor:\t" << this << endl;
+		//this->size = strlen(str) + 1;
+		//this->str = new char[size] {};
+		for (int i = 0; i < size; i++)this->str[i] = str[i];
+		cout << "Constructor:\t\t" << this << endl;
 	}
-	String(const String& other)
+	String(const String& other) :String(other.str)
 	{
-		this->size = other.size;
-		this->str = new char[size] {};
-		for (int i = 0; i < size; i++)this->str[i] = other.str[i];
+		//Deep copy (Побитовое копирование):
+		//this->size = other.size;
+		//this->str = new char[size] {};
+		//for (int i = 0; i < size; i++)this->str[i] = other.str[i];
 		cout << "CopyConstructor:\t" << this << endl;
 	}
-	String(String&& other)
+	String(String&& other) :size(other.size), str(other.str)
 	{
-		this->size = other.size;
-		this->str = other.str;
+		//Shallow copy (Поверхностное копирование):
+		//this->size = other.size;
+		//this->str = other.str;
 		other.size = 0;
 		other.str = nullptr;
-		cout << "MoveConstructors:\t" << this << endl;
+		cout << "MoveConstructor:\t" << this << endl;
 	}
 	~String()
 	{
 		delete[] this->str;
-		cout << std::left << "Destructor:\t\t" << this << endl;
+		cout << "Destrutor:\t\t" << this << endl;
 	}
 	//			Operators:
 	String& operator=(const String& other)
 	{
-		//0) Проверяем, не является ли принятый параметр нашим обьектом
+		//Deep copy (Побитовое копирование):
+		int a = 2;
+		int b = 3;
+		a = b;
+
+		//0) Проверяем, не является ли принятый паметр нашим объектом:
 		if (this == &other)return *this;
-		//1) Удаляем старую строку
+
+		//1) Удаляем старую строку:
 		delete[] this->str;
+
+		//2) Выполняем побитовое копирование:
 		this->size = other.size;
 		this->str = new char[size] {};
 		for (int i = 0; i < size; i++)this->str[i] = other.str[i];
-		cout << "CopyAssignment:\t" << this << endl;
+		cout << "CopyAssignment:\t\t" << this << endl;
 		return *this;
 	}
 	String& operator=(String&& other)
 	{
-		if (this == &other) return *this;
+		if (this == &other)return *this;
 		delete[] this->str;
+		//Shallow copy (Поверхностное копирование):
 		this->size = other.size;
 		this->str = other.str;
 		other.size = 0;
 		other.str = nullptr;
 		cout << "MoveAssignemtn:\t\t" << this << endl;
 	}
+
+	//				Operators:
 	String& operator+=(const String& other)
 	{
 		return *this = *this + other;
 	}
-	//			Methods;
-	void print()const
-	{
-		cout << "Size:\t" << size << endl;
-		cout << "Str " << str << endl;
-	}
+
 	const char& operator[](int i)const
 	{
 		return str[i];
@@ -102,27 +106,40 @@ public:
 		return str[i];
 	}
 
+
+	//			Methods:
+	void print()const
+	{
+		cout << "Size:\t" << size << endl;
+		cout << "Str:\t" << str << endl;
+	}
 };
-ostream& operator<<(ostream& os, const String& obj)
+
+String operator+(const String& left, const String& right)
 {
+	String cat(left.get_size() + right.get_size() - 1);
+	for (int i = 0; i < left.get_size(); i++)
+		cat[i] = left[i];
+	//cat.get_str()[i] = left.get_str()[i];
+	for (int i = 0; i < right.get_size(); i++)
+		cat[i + left.get_size() - 1] = right[i];
+	//cat.get_str()[i + left.get_size() - 1] = right.get_str()[i];
+	return cat;
+}
+std::ostream& operator<<(std::ostream& os, const String& obj)
+{
+	//os - Output Stream
+	//obj - Object
 	return os << obj.get_str();
 }
 std::istream& operator>>(std::istream& is, String& obj)
 {
+	//is - Input Stream
 	const int SIZE = 102400;
 	char buffer[SIZE]{};
 	is >> buffer;
 	obj = buffer;
-	return is;
-}
-String operator+(const String& left, const String& right)
-{
-	String sum(left.get_size() + right.get_size() - 1);
-	for (int i = 0; i < left.get_size(); i++)
-		sum.get_str()[i] = left.get_str()[i];
-	for (int i = 0; i < right.get_size(); i++)
-		sum.get_str()[i + left.get_size() - 1] = right.get_str()[i];
-	return sum;
+	return is;// >> obj.get_str();
 }
 
 
